@@ -8,7 +8,7 @@ from pyfonts import load_font
 #---------------------------------------------------------------
 #Configs and functions -----------------------------------------
 st.set_page_config(
-    page_title="Last Month in Sports",
+    page_title="Last 30 Days in Sports",
     page_icon="weight_lifter",
     #layout="wide",
      )
@@ -73,10 +73,10 @@ def convert_time(sec):
 #process data for chart
 def process_data(df):
 
-    #find last month in dataset
+    #find last 30 days in dataset
     last_date = df["Activity Date"].max()
-    start_month = last_date.replace(day=1)
-    df_filtered = df[(df["Activity Date"] >= start_month) & (df["Activity Date"] <= last_date)]
+    start_date = last_date - pd.Timedelta(days=29)
+    df_filtered = df[(df["Activity Date"] >= start_date) & (df["Activity Date"] <= last_date)]
 
     #get activity types
     top_three = df_filtered["Activity Type"].value_counts().index.to_list()
@@ -87,10 +87,10 @@ def process_data(df):
         daily = sub.groupby(sub["Activity Date"].dt.date).agg({"Distance": "sum", "Moving Time": "sum"}).reset_index()
         activity_data[act] = daily
 
-    return df_filtered, activity_data, last_date
+    return df_filtered, activity_data, last_date, start_date
 
 #create visual
-def create_visualisation(activity_data,last_date):
+def create_visualisation(activity_data,last_date,start_date):
 
     #configs-------------------------------------
     act_color = ["#6DB4C8", "#FD7B5C", "#FBCA58", "#7E8384"]
@@ -114,19 +114,19 @@ def create_visualisation(activity_data,last_date):
 
     axes[-1].set_xlabel("Date", fontproperties=font_r, color=colors["text"])
 
-    month_label = last_date.strftime("%B %Y")
-    plt.figtext(0.5,0.95,'My last month in sports'.upper(),
+    period_label = f"{start_date.strftime('%d %b')} – {last_date.strftime('%d %b %Y')}"
+    plt.figtext(0.5,0.95,'My last 30 days in sports'.upper(),
                 ha="center",
                 fontsize = 40,
                 color=colors["text"],
                 fontproperties=font_b)
-    plt.figtext(0.5,0.91,month_label, ha="center",fontsize = 20, color=colors["text"], alpha=0.95, fontproperties=font_r)
+    plt.figtext(0.5,0.91,period_label, ha="center",fontsize = 20, color=colors["text"], alpha=0.95, fontproperties=font_r)
     plt.figtext(0.5,0.05,'Data: Strava | Design: Lisa Hornung',ha="center", fontsize = 7, color=colors["text"], alpha=0.7,fontproperties=font_r)
 
     return fig
 
 #Main app--------------------------------------------------------
-st.title('My last month in sports')
+st.title('My last 30 days in sports')
 st.markdown("#### Visualise your most recent activities")
 st.write("")
 
@@ -215,8 +215,8 @@ st.markdown("\n")
 
 #run visualisation
 if st.session_state["FormSubmitter:user_inputs-Create visualisation"] is not None:
-    df_filtered,activity_data,last_date = process_data(df)
-    fig = create_visualisation(activity_data,last_date)
+    df_filtered,activity_data,last_date,start_date = process_data(df)
+    fig = create_visualisation(activity_data,last_date,start_date)
     st.write(fig)
 
 
@@ -224,21 +224,21 @@ if st.session_state["FormSubmitter:user_inputs-Create visualisation"] is not Non
 if st.session_state["FormSubmitter:user_inputs-Create visualisation"] is not None:
     st.divider()
     st.write("")   
-    plt.savefig("my-last-month-in-sports.png", bbox_inches="tight", pad_inches=0.8)
-    with open("my-last-month-in-sports.png", "rb") as file:
+    plt.savefig("my-last-30-days-in-sports.png", bbox_inches="tight", pad_inches=0.8)
+    with open("my-last-30-days-in-sports.png", "rb") as file:
         btn = st.download_button(
                     label="Download image",
                     data=file,
-                    file_name="my-last-month-in-sports.png",
+                    file_name="my-last-30-days-in-sports.png",
                     mime="image/png"
                 )
 
-    plt.savefig("my-last-month-in-sports.svg",bbox_inches="tight", pad_inches=0.8)
-    with open("my-last-month-in-sports.svg", "rb") as file:
+    plt.savefig("my-last-30-days-in-sports.svg",bbox_inches="tight", pad_inches=0.8)
+    with open("my-last-30-days-in-sports.svg", "rb") as file:
         btn = st.download_button(
                     label="Download svg",
                     data=file,
-                    file_name="my-last-month-in-sports.svg",
+                    file_name="my-last-30-days-in-sports.svg",
                     mime="svg"
                 )
 
